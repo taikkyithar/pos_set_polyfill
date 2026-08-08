@@ -1,0 +1,138 @@
+<div style="max-width: 900px; margin: 0 auto; background: #ffffff; padding: 20px; font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #2b2b2b; line-height: 1.55;">
+
+  <!-- Hero -->
+  <div style="background: linear-gradient(135deg, #714B67 0%, #4b2f45 100%); border-radius: 8px; padding: 40px 36px; color: #ffffff; margin-bottom: 28px;">
+    <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">POS Set Methods Polyfill</h1>
+    <div style="font-size: 16px; opacity: 0.9; margin-bottom: 16px;">Legacy Android WebView fix for Odoo 19 Point of Sale</div>
+    <div style="font-size: 15px; max-width: 640px; opacity: 0.95;">
+      Restores 7 missing JavaScript <code style="background: rgba(255,255,255,0.15); padding: 1px 6px; border-radius: 4px;">Set</code> methods so Odoo 19 POS opens reliably on older Android POS terminals - including the Sunmi T2 - instead of failing to load.
+    </div>
+    <div style="margin-top: 20px;">
+      <span style="display: inline-block; background: rgba(255,255,255,0.15); border-radius: 4px; padding: 4px 10px; font-size: 12px; margin-right: 8px;">Odoo 19.0</span>
+      <span style="display: inline-block; background: rgba(255,255,255,0.15); border-radius: 4px; padding: 4px 10px; font-size: 12px; margin-right: 8px;">Point of Sale</span>
+      <span style="display: inline-block; background: rgba(255,255,255,0.15); border-radius: 4px; padding: 4px 10px; font-size: 12px; margin-right: 8px;">Zero configuration</span>
+      <span style="display: inline-block; background: rgba(255,255,255,0.15); border-radius: 4px; padding: 4px 10px; font-size: 12px;">LGPL-3</span>
+    </div>
+  </div>
+
+  <!-- The problem -->
+  <div style="margin-bottom: 28px;">
+    <h2 style="font-size: 20px; color: #4b2f45; border-bottom: 2px solid #eee; padding-bottom: 8px;">The problem</h2>
+    <p style="font-size: 15px;">
+      Odoo 19's Point of Sale frontend uses modern ES2024 <code>Set</code> methods -
+      <code>difference()</code>, <code>intersection()</code>, <code>union()</code>,
+      <code>symmetricDifference()</code>, <code>isSubsetOf()</code>, <code>isSupersetOf()</code> and
+      <code>isDisjointFrom()</code>. These only exist in Chrome / Android WebView <strong>122 and later</strong>
+      (early 2024).
+    </p>
+    <p style="font-size: 15px;">
+      Plenty of Android POS terminals in active use - the <strong>Sunmi T2</strong> among them - run a locked
+      system image that can't be updated (e.g. Android 7.1.1 with WebView 119). On that hardware, opening a POS
+      session throws a JavaScript error and the register screen never finishes loading, even though the exact
+      same database works fine on a modern computer, phone or tablet.
+    </p>
+    <div style="background: #1e1e1e; color: #d4d4d4; font-family: 'SFMono-Regular', Consolas, Menlo, monospace; font-size: 13px; border-radius: 6px; padding: 14px 16px; margin-top: 12px;">
+      <span style="color: #f48771;">Uncaught TypeError:</span> currentSet.difference is not a function
+      <div style="color: #6a9955; margin-top: 4px;">// typical console error on WebView &lt; 122 without this fix</div>
+    </div>
+  </div>
+
+  <!-- The fix -->
+  <div style="margin-bottom: 28px;">
+    <h2 style="font-size: 20px; color: #4b2f45; border-bottom: 2px solid #eee; padding-bottom: 8px;">What this module does</h2>
+    <ul style="font-size: 15px; padding-left: 20px;">
+      <li style="margin-bottom: 8px;">Adds the 7 missing <code>Set.prototype</code> methods back, with the same behaviour as the native implementation.</li>
+      <li style="margin-bottom: 8px;">Only defines a method if it's actually missing - on modern browsers every method is left untouched, so it's a true no-op there.</li>
+      <li style="margin-bottom: 8px;">Installs methods as non-enumerable, matching native semantics, so it won't leak into <code>for...in</code>, <code>Object.keys()</code> or feature-detection code.</li>
+      <li style="margin-bottom: 8px;">Ships as a single plain script <strong>appended</strong> (not prepended) to the POS production assets bundle, so Odoo's own module loader bootstrap is never disturbed.</li>
+      <li>Runs synchronously as the bundle parses - before POS's own async startup code ever calls a <code>Set</code> method - so there's no race condition.</li>
+    </ul>
+  </div>
+
+  <!-- Highlights grid -->
+  <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 28px;">
+    <div style="flex: 1 1 200px; border: 1px solid #eee; border-left: 4px solid #714B67; border-radius: 6px; padding: 14px 16px;">
+      <div style="font-weight: 700; margin-bottom: 4px;">Zero configuration</div>
+      <div style="font-size: 14px; color: #555;">Install the app and it just works. No settings, no setup wizard.</div>
+    </div>
+    <div style="flex: 1 1 200px; border: 1px solid #eee; border-left: 4px solid #714B67; border-radius: 6px; padding: 14px 16px;">
+      <div style="font-weight: 700; margin-bottom: 4px;">Safe by design</div>
+      <div style="font-size: 14px; color: #555;">Never overrides an existing native method - impossible to break modern browsers.</div>
+    </div>
+    <div style="flex: 1 1 200px; border: 1px solid #eee; border-left: 4px solid #714B67; border-radius: 6px; padding: 14px 16px;">
+      <div style="font-weight: 700; margin-bottom: 4px;">Featherweight</div>
+      <div style="font-size: 14px; color: #555;">One small script. No models, views, menus or database changes.</div>
+    </div>
+    <div style="flex: 1 1 200px; border: 1px solid #eee; border-left: 4px solid #714B67; border-radius: 6px; padding: 14px 16px;">
+      <div style="font-weight: 700; margin-bottom: 4px;">Plays nice</div>
+      <div style="font-size: 14px; color: #555;">Only appends to the POS bundle, so it won't conflict with other POS customizations.</div>
+    </div>
+  </div>
+
+  <!-- Who it's for -->
+  <div style="margin-bottom: 28px;">
+    <h2 style="font-size: 20px; color: #4b2f45; border-bottom: 2px solid #eee; padding-bottom: 8px;">Who this is for</h2>
+    <p style="font-size: 15px;">
+      Retailers, restaurants and implementers running Odoo 19 Point of Sale on older or budget Android
+      terminals - Sunmi devices, generic Android POS boxes, or older tablets - that cannot be upgraded to a
+      newer Android System WebView. It also works as a safety net anywhere the WebView version on POS
+      hardware can't be guaranteed in advance.
+    </p>
+  </div>
+
+  <!-- Compatibility -->
+  <div style="margin-bottom: 28px;">
+    <h2 style="font-size: 20px; color: #4b2f45; border-bottom: 2px solid #eee; padding-bottom: 8px;">Compatibility</h2>
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #eee; background: #f8f9fa; font-weight: 600; width: 220px;">Odoo version</td>
+        <td style="padding: 8px 12px; border: 1px solid #eee;">19.0</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #eee; background: #f8f9fa; font-weight: 600;">Depends on</td>
+        <td style="padding: 8px 12px; border: 1px solid #eee;">Point of Sale (<code>point_of_sale</code>)</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #eee; background: #f8f9fa; font-weight: 600;">License</td>
+        <td style="padding: 8px 12px; border: 1px solid #eee;">LGPL-3</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #eee; background: #f8f9fa; font-weight: 600;">Modifies core files</td>
+        <td style="padding: 8px 12px; border: 1px solid #eee;">No - adds one asset to the POS bundle only</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #eee; background: #f8f9fa; font-weight: 600;">Known affected hardware</td>
+        <td style="padding: 8px 12px; border: 1px solid #eee;">Sunmi T2 (Android 7.1.1 / WebView 119) and similar locked Android WebView &lt; 122 devices</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Installation -->
+  <div style="margin-bottom: 28px;">
+    <h2 style="font-size: 20px; color: #4b2f45; border-bottom: 2px solid #eee; padding-bottom: 8px;">Installation</h2>
+    <ol style="font-size: 15px; padding-left: 20px;">
+      <li style="margin-bottom: 6px;">Go to <strong>Apps</strong>, click <strong>Update Apps List</strong>, then search for "POS Set Methods Polyfill".</li>
+      <li style="margin-bottom: 6px;">Click <strong>Install</strong>.</li>
+      <li>Fully reload the POS session on the affected terminal (close and reopen the POS screen/browser) so it picks up the updated asset bundle.</li>
+    </ol>
+    <p style="font-size: 14px; color: #555;">No further configuration is required.</p>
+  </div>
+
+  <!-- FAQ -->
+  <div style="margin-bottom: 12px;">
+    <h2 style="font-size: 20px; color: #4b2f45; border-bottom: 2px solid #eee; padding-bottom: 8px;">Frequently asked questions</h2>
+
+    <p style="font-size: 15px; margin-bottom: 4px;"><strong>Will this slow down POS on modern devices?</strong></p>
+    <p style="font-size: 14px; color: #555; margin-top: 0;">No. On any browser that already has native Set methods, the polyfill detects that and does nothing.</p>
+
+    <p style="font-size: 15px; margin-bottom: 4px;"><strong>Does it modify Odoo core files?</strong></p>
+    <p style="font-size: 14px; color: #555; margin-top: 0;">No. It only appends one script to the <code>point_of_sale.assets_prod</code> bundle.</p>
+
+    <p style="font-size: 15px; margin-bottom: 4px;"><strong>Will it conflict with other POS apps I've installed?</strong></p>
+    <p style="font-size: 14px; color: #555; margin-top: 0;">It's designed not to - it only adds a method if one doesn't already exist, and it appends to the bundle rather than replacing anything.</p>
+
+    <p style="font-size: 15px; margin-bottom: 4px;"><strong>Does this fix every issue on old Android POS terminals?</strong></p>
+    <p style="font-size: 14px; color: #555; margin-top: 0;">It fixes the specific crash caused by missing ES2024 <code>Set</code> methods. Very old devices can occasionally be missing other modern JavaScript APIs as well, which would need separate polyfills.</p>
+  </div>
+
+</div>
