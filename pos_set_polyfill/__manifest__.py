@@ -21,6 +21,10 @@ work again.
     """,
     "category": "Point of Sale",
     "license": "LGPL-3",
+    "author": "taikkyithar",
+    "website": "https://github.com/taikkyithar/pos_set_polyfill",
+    "support": "devuser@7thcomputing.com",
+    "images": ["static/description/banner.png"],
     "depends": ["point_of_sale"],
     "assets": {
         # APPEND (not prepend): adding the polyfill to the end of the bundle
